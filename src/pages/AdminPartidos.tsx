@@ -11,7 +11,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
-import { calcularPuntosPorPartido } from "../services/tablaPosicionesService";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
