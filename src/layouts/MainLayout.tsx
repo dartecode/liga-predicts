@@ -30,7 +30,6 @@ export default function MainLayout() {
     <div className="min-h-screen bg-slate-100">
       <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-4">
-
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm sm:text-base">
               <Link className={activo("/")} to="/">
@@ -44,6 +43,15 @@ export default function MainLayout() {
               <Link className={activo("/tabla")} to="/tabla">
                 Tabla
               </Link>
+
+              {perfil?.rol === "admin" && (
+                <Link
+                  className={activo("/admin/partidos")}
+                  to="/admin/partidos"
+                >
+                  Admin Partidos
+                </Link>
+              )}
             </div>
           </div>
 

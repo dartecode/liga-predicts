@@ -18,29 +18,35 @@ function AppContent() {
     return <p>Cargando...</p>;
   }
 
-  if (!user) {
-    return <Login />;
-  }
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/mis-pronosticos" element={<MisPronosticos />} />
-          <Route
-            path="/admin/partidos"
-            element={
-              <RutaAdmin>
-                <AdminPartidos />
-              </RutaAdmin>
-            }
-          />
-          <Route path="/admin/partidos" element={<AdminPartidos />} />
-          <Route path="/tabla" element={<TablaPosiciones />} />
-        </Route>
+        {!user ? (
+          <>
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </>
+        ) : (
+          <>
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/mis-pronosticos" element={<MisPronosticos />} />
+              <Route path="/tabla" element={<TablaPosiciones />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+              <Route
+                path="/admin/partidos"
+                element={
+                  <RutaAdmin>
+                    <AdminPartidos />
+                  </RutaAdmin>
+                }
+              />
+            </Route>
+
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        )}
       </Routes>
     </BrowserRouter>
   );
