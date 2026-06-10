@@ -3,8 +3,8 @@ import {
     collection,
     getDocs,
     doc,
+    setDoc,
     updateDoc,
-    addDoc,
     query,
     orderBy,
     Timestamp,
@@ -76,13 +76,24 @@ export default function AdminPartidos() {
         try {
             const fechaCompleta = new Date(`${fechaPartido}T${horaPartido}`);
 
-            await addDoc(collection(db, "partidos"), {
+            const snapshot = await getDocs(collection(db, "partidos"));
+
+            const idsNumericos = snapshot.docs
+                .map((d) => parseInt(d.id))
+                .filter((id) => !isNaN(id));
+
+            const siguienteId =
+                idsNumericos.length > 0
+                    ? Math.max(...idsNumericos) + 1
+                    : 1;
+
+            await setDoc(doc(db, "partidos", String(siguienteId)), {
                 local,
                 visitante,
                 fechaPartido: Timestamp.fromDate(fechaCompleta),
                 estado: "pendiente",
-                golesLocal: null,
-                golesVisitante: null,
+                resultadoLocal: null,
+                resultadoVisitante: null,
             });
 
             setLocal("");

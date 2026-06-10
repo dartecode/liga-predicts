@@ -81,6 +81,8 @@ export const BANDERAS: Record<string, string> = {
     "El Salvador": "SV",
     "Guatemala": "GT",
     "Trinidad y Tobago": "TT",
+    "Haití": "HT",
+    "Curazao": "CW",
 
     // OFC
     "Islas Salomón": "SB",
