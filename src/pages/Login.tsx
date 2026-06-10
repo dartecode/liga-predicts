@@ -18,14 +18,26 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
       <form
         onSubmit={ingresar}
-        className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg border border-slate-200"
+        className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg"
       >
-        <h1 className="mb-2 text-center text-3xl font-bold text-slate-800">
-          ⚽ Predicts
-        </h1>
+        <div className="mb-6 flex flex-col items-center">
+          <img
+            src="/logo-d3.png"
+            alt="D3 Predicts"
+            className="h-32 w-32 rounded-2xl object-cover shadow-md"
+          />
+
+          <h1 className="mt-4 text-center text-3xl font-extrabold text-slate-800">
+            D3 Predicts
+          </h1>
+
+          <p className="mt-1 text-center text-sm font-medium text-slate-500">
+            FIFA World Cup 2026
+          </p>
+        </div>
 
         <p className="mb-8 text-center text-slate-500">
           Ingresa a tu liga de predicciones
@@ -42,6 +54,7 @@ export default function Login() {
             placeholder="correo@ejemplo.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
 
@@ -56,6 +69,7 @@ export default function Login() {
             placeholder="********"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
         </div>
 

@@ -30,7 +30,25 @@ export default function MainLayout() {
     <div className="min-h-screen bg-slate-100">
       <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-4">
-          <div className="flex items-center justify-between gap-3">
+          
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+            <Link to="/" className="flex items-center gap-3">
+              <img
+                src="/logo-d3.png"
+                alt="D3 Predicts"
+                className="h-12 w-12 rounded-xl object-cover shadow-sm"
+              />
+
+              <div className="leading-tight">
+                <h1 className="text-lg font-extrabold text-slate-800">
+                  D3 Predicts
+                </h1>
+                <p className="text-xs font-medium text-slate-500">
+                  FIFA World Cup 2026
+                </p>
+              </div>
+            </Link>
+
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm sm:text-base">
               <Link className={activo("/")} to="/">
                 Inicio

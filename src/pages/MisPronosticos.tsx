@@ -16,14 +16,24 @@ export default function MisPronosticos() {
     null
   );
 
+  const convertirFecha = (fecha: any) => {
+    return fecha?.toDate ? fecha.toDate() : new Date(fecha);
+  };
+
   const cargarPartidos = async () => {
     try {
       setCargando(true);
 
-      const data = await obtenerPartidos();
+      const data = (await obtenerPartidos()) as any[];
+      const ahora = new Date();
 
       if (!perfil?.id) {
-        setPartidos(data);
+        const partidosFuturos = data.filter((partido) => {
+          const fechaPartido = convertirFecha(partido.fechaPartido);
+          return fechaPartido > ahora;
+        });
+
+        setPartidos(partidosFuturos);
         return;
       }
 
@@ -50,7 +60,13 @@ export default function MisPronosticos() {
         };
       });
 
-      setPartidos(partidosConPronostico);
+      const partidosFiltrados = partidosConPronostico.filter((partido) => {
+        const fechaPartido = convertirFecha(partido.fechaPartido);
+
+        return fechaPartido > ahora || partido.pronostico;
+      });
+
+      setPartidos(partidosFiltrados);
     } catch (error) {
       console.error(error);
     } finally {
@@ -61,10 +77,6 @@ export default function MisPronosticos() {
   useEffect(() => {
     cargarPartidos();
   }, [perfil?.id]);
-
-  const convertirFecha = (fecha: any) => {
-    return fecha?.toDate ? fecha.toDate() : new Date(fecha);
-  };
 
   const partidoYaInicio = (fecha: any) => {
     const fechaPartido = convertirFecha(fecha);
@@ -120,6 +132,10 @@ export default function MisPronosticos() {
 
         {cargando ? (
           <p className="text-slate-700">Cargando partidos...</p>
+        ) : Object.keys(partidosAgrupados).length === 0 ? (
+          <p className="rounded-2xl bg-white p-5 text-slate-600 shadow-sm">
+            No tienes partidos disponibles para pronosticar.
+          </p>
         ) : (
           Object.entries(partidosAgrupados).map(([fecha, partidosDia]) => (
             <div key={fecha} className="space-y-3">
@@ -187,16 +203,17 @@ export default function MisPronosticos() {
                           setPartidoSeleccionado(partido);
                         }}
                         disabled={bloqueado}
-                        className={`rounded-xl px-5 py-2 font-bold shadow-sm transition ${bloqueado
+                        className={`rounded-xl px-5 py-2 font-bold shadow-sm transition ${
+                          bloqueado
                             ? "cursor-not-allowed bg-slate-300 text-slate-500"
                             : "bg-blue-600 text-white hover:bg-blue-700"
-                          }`}
+                        }`}
                       >
                         {bloqueado
                           ? "Pronóstico cerrado"
                           : partido.pronostico
-                            ? "Editar"
-                            : "Pronosticar"}
+                          ? "Editar"
+                          : "Pronosticar"}
                       </button>
                     </div>
                   </div>
