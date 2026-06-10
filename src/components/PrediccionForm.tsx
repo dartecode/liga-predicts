@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { guardarPrediccion, obtenerPrediccionUsuario } from "../services/prediccionesService";
+import {
+    guardarPrediccion,
+    obtenerPrediccionUsuario,
+} from "../services/prediccionesService";
 import type { Usuario } from "../types/Usuario";
 
 interface Props {
@@ -8,8 +11,11 @@ interface Props {
     onGuardado?: () => void;
 }
 
-
-export default function PrediccionForm({ partidoId, usuario, onGuardado }: Props) {
+export default function PrediccionForm({
+    partidoId,
+    usuario,
+    onGuardado,
+}: Props) {
     const [golesLocal, setGolesLocal] = useState<number | "">("");
     const [golesVisitante, setGolesVisitante] = useState<number | "">("");
     const [guardando, setGuardando] = useState(false);
@@ -42,13 +48,10 @@ export default function PrediccionForm({ partidoId, usuario, onGuardado }: Props
                 partidoId,
                 usuarioId: usuario.id,
                 nombreUsuario: usuario.usuario,
-
                 golesLocal: Number(golesLocal),
                 golesVisitante: Number(golesVisitante),
-
                 fechaPrediccion: new Date(),
                 fechaActualizacion: new Date(),
-
                 puntos: 0,
                 resultadoExacto: false,
                 partidoAcertado: false,
@@ -65,55 +68,63 @@ export default function PrediccionForm({ partidoId, usuario, onGuardado }: Props
     };
 
     return (
-        <div className="mt-4 rounded-xl border border-slate-700 bg-slate-900 p-6">
-            <p className="mb-4 text-center text-xl font-semibold text-slate-200">
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <p className="mb-4 text-center text-xl font-semibold text-slate-800">
                 Tu predicción
             </p>
 
-            <div className="flex items-center justify-center gap-4">
-                <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={golesLocal}
-                    onChange={(e) => {
-                        const valor = e.target.value;
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <div className="flex items-center justify-center gap-3">
+                    <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={golesLocal}
+                        onChange={(e) => {
+                            const valor = e.target.value;
 
-                        if (/^\d*$/.test(valor)) {
-                            setGolesLocal(valor === "" ? "" : Number(valor));
-                        }
-                    }}
-                    className="h14 w-20 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-center text-white outline-none"
-                />
+                            if (/^\d*$/.test(valor)) {
+                                setGolesLocal(valor === "" ? "" : Number(valor));
+                            }
+                        }}
+                        className="h-14 w-24 rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-2xl font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
 
-                <span className="text-slate-400">-</span>
+                    <span className="text-lg font-bold text-slate-500">-</span>
 
-                <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={golesVisitante}
-                    onChange={(e) => {
-                        const valor = e.target.value;
+                    <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={golesVisitante}
+                        onChange={(e) => {
+                            const valor = e.target.value;
 
-                        if (/^\d*$/.test(valor)) {
-                            setGolesVisitante(valor === "" ? "" : Number(valor));
-                        }
-                    }}
-                    className="h14 w-20 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-center text-white outline-none"
-                />
+                            if (/^\d*$/.test(valor)) {
+                                setGolesVisitante(valor === "" ? "" : Number(valor));
+                            }
+                        }}
+                        className="h-14 w-24 rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-2xl font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                </div>
 
                 <button
                     onClick={handleGuardar}
                     disabled={guardando}
-                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                    className="h-12 w-full rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60 sm:w-auto"
                 >
                     {guardando ? "Guardando..." : "Guardar"}
                 </button>
             </div>
 
             {mensaje && (
-                <p className="mt-3 text-sm text-slate-300">
+                <p
+                    className={`mt-4 rounded-xl p-3 text-center text-sm font-semibold ${
+                        mensaje.includes("Error") || mensaje.includes("Ingresa")
+                            ? "border border-red-200 bg-red-50 text-red-700"
+                            : "border border-blue-200 bg-blue-50 text-blue-700"
+                    }`}
+                >
                     {mensaje}
                 </p>
             )}

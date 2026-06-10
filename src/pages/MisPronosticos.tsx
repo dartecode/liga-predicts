@@ -187,17 +187,16 @@ export default function MisPronosticos() {
                           setPartidoSeleccionado(partido);
                         }}
                         disabled={bloqueado}
-                        className={`rounded-xl px-5 py-2 font-bold shadow-md transition ${
-                          bloqueado
+                        className={`rounded-xl px-5 py-2 font-bold shadow-sm transition ${bloqueado
                             ? "cursor-not-allowed bg-slate-300 text-slate-500"
-                            : "bg-gradient-to-r from-red-600 to-green-600 text-white hover:opacity-90"
-                        }`}
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                          }`}
                       >
                         {bloqueado
                           ? "Pronóstico cerrado"
                           : partido.pronostico
-                          ? "Editar"
-                          : "Pronosticar"}
+                            ? "Editar"
+                            : "Pronosticar"}
                       </button>
                     </div>
                   </div>
@@ -209,44 +208,43 @@ export default function MisPronosticos() {
       </div>
 
       {partidoSeleccionado && perfil && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-950 shadow-2xl">
-            <div className="rounded-t-3xl bg-gradient-to-r from-red-600 via-white to-emerald-500 p-[2px]">
-              <div className="rounded-t-3xl bg-slate-950 px-5 py-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-white">
-                    Guardar pronóstico
-                  </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">
+                  Guardar pronóstico
+                </h2>
 
-                  <button
-                    onClick={() => setPartidoSeleccionado(null)}
-                    className="rounded-full bg-white/10 px-3 py-1 text-sm text-white hover:bg-white/20"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-5">
-              <div className="mb-4 rounded-2xl bg-slate-900 p-4 text-center">
-                <p className="text-sm text-slate-400">Partido</p>
-
-                <h3 className="mt-2 text-lg font-black text-white">
-                  {partidoSeleccionado.local} vs{" "}
-                  {partidoSeleccionado.visitante}
-                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Ingresa el marcador que crees que tendrá el partido.
+                </p>
               </div>
 
-              <PrediccionForm
-                partidoId={String(partidoSeleccionado.id)}
-                usuario={perfil}
-                onGuardado={async () => {
-                  setPartidoSeleccionado(null);
-                  await cargarPartidos();
-                }}
-              />
+              <button
+                onClick={() => setPartidoSeleccionado(null)}
+                className="rounded-full px-3 py-1 text-lg font-bold text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              >
+                ✕
+              </button>
             </div>
+
+            <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">
+              <p className="text-sm text-slate-500">Partido</p>
+
+              <h3 className="mt-2 text-lg font-black text-slate-800">
+                {partidoSeleccionado.local} vs {partidoSeleccionado.visitante}
+              </h3>
+            </div>
+
+            <PrediccionForm
+              partidoId={String(partidoSeleccionado.id)}
+              usuario={perfil}
+              onGuardado={async () => {
+                setPartidoSeleccionado(null);
+                await cargarPartidos();
+              }}
+            />
           </div>
         </div>
       )}

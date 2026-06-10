@@ -29,32 +29,37 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen bg-slate-100">
       <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <div className="flex gap-6">
-            <Link className={activo("/")} to="/">
-              Inicio
-            </Link>
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-4">
 
-            <Link className={activo("/mis-pronosticos")} to="/mis-pronosticos">
-              Mis Pronósticos
-            </Link>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm sm:text-base">
+              <Link className={activo("/")} to="/">
+                Inicio
+              </Link>
 
-            <Link className={activo("/tabla")} to="/tabla">
-              Tabla
-            </Link>
+              <Link className={activo("/mis-pronosticos")} to="/mis-pronosticos">
+                Mis Pronósticos
+              </Link>
+
+              <Link className={activo("/tabla")} to="/tabla">
+                Tabla
+              </Link>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-xs text-slate-500">Conectado como</span>
-              <span className="font-semibold text-slate-800">
+          <div className="flex items-center justify-between gap-3 sm:justify-end">
+            <div className="flex flex-col">
+              <span className="text-[11px] text-slate-500">
+                Conectado como
+              </span>
+              <span className="max-w-[140px] truncate text-sm font-semibold text-slate-800 sm:max-w-none">
                 {perfil?.usuario}
               </span>
             </div>
 
             <button
               onClick={() => setMostrarModal(true)}
-              className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600"
+              className="shrink-0 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
             >
               Cerrar sesión
             </button>
