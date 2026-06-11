@@ -6,14 +6,23 @@ import { obtenerPartidos } from "../services/partidosService";
 import { useAuth } from "../context/AuthContext";
 import { BANDERAS } from "../utils/banderas";
 import ReactCountryFlag from "react-country-flag";
+import PrediccionForm from "../components/PrediccionForm";
 
 export default function Home() {
   const { perfil } = useAuth();
+
   const [partidos, setPartidos] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [partidoSeleccionado, setPartidoSeleccionado] = useState<any | null>(
+    null
+  );
 
   const convertirFecha = (fecha: any) =>
     fecha?.toDate ? fecha.toDate() : new Date(fecha);
+
+  const partidoBloqueado = (fecha: any) => {
+    return new Date() >= convertirFecha(fecha);
+  };
 
   const esHoy = (fecha: any) => {
     const date = convertirFecha(fecha);
@@ -89,29 +98,22 @@ export default function Home() {
 
   const totalPartidos = partidos.length;
 
-  const totalPronosticados = partidos.filter(
-    (p) => p.pronostico
-  ).length;
+  const totalPronosticados = partidos.filter((p) => p.pronostico).length;
 
   const totalPendientes = totalPartidos - totalPronosticados;
 
   const ahora = new Date();
 
   const proximoPartido = [...partidos]
-    .filter((partido) => {
-      const fecha = convertirFecha(partido.fechaPartido);
-      return fecha > ahora;
-    })
+    .filter((partido) => convertirFecha(partido.fechaPartido) > ahora)
     .sort(
       (a, b) =>
         convertirFecha(a.fechaPartido).getTime() -
         convertirFecha(b.fechaPartido).getTime()
     )[0];
 
-
   const tiempoRestante = (fecha: any) => {
-    const diferencia =
-      convertirFecha(fecha).getTime() - new Date().getTime();
+    const diferencia = convertirFecha(fecha).getTime() - new Date().getTime();
 
     if (diferencia <= 0) return "Cerrado";
 
@@ -140,6 +142,7 @@ export default function Home() {
             <p className="text-lg font-bold text-slate-800">
               No hay partidos programados para hoy
             </p>
+
             <Link
               to="/mis-pronosticos"
               className="mt-4 inline-block rounded-xl bg-slate-800 px-5 py-2 font-bold text-white"
@@ -148,72 +151,86 @@ export default function Home() {
             </Link>
           </div>
         ) : (
-          partidosHoy.map((partido) => (
-            <div
-              key={partido.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="flex flex-wrap items-center gap-2 text-xl font-bold text-slate-800">
-                    <span className="text-base">{BANDERAS[partido.local]}</span>
-                    {partido.local}
-                    <span className="text-slate-400">vs</span>
-                    <span className="text-base">
-                      {BANDERAS[partido.visitante]}
+          partidosHoy.map((partido) => {
+            const bloqueado = partidoBloqueado(partido.fechaPartido);
+
+            return (
+              <div
+                key={partido.id}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="flex flex-wrap items-center gap-2 text-xl font-bold text-slate-800">
+                      <ReactCountryFlag
+                        countryCode={BANDERAS[partido.local]}
+                        svg
+                        style={{ width: "1.2em", height: "1.2em" }}
+                      />
+
+                      {partido.local}
+
+                      <span className="text-slate-400">vs</span>
+
+                      <ReactCountryFlag
+                        countryCode={BANDERAS[partido.visitante]}
+                        svg
+                        style={{ width: "1.2em", height: "1.2em" }}
+                      />
+
+                      {partido.visitante}
+                    </h2>
+
+                    <p className="mt-2 text-sm text-slate-500">
+                      🕒 {formatearHora(partido.fechaPartido)}
+                    </p>
+
+                    <p className="mt-2 text-sm font-semibold text-slate-700">
+                      🎯 Mi pronóstico:{" "}
+                      {partido.pronostico
+                        ? `${partido.pronostico.golesLocal} - ${partido.pronostico.golesVisitante}`
+                        : "Sin pronóstico"}
+                    </p>
+                  </div>
+
+                  {bloqueado ? (
+                    <span className="rounded-xl bg-slate-300 px-5 py-2 text-center font-bold text-slate-600">
+                      Pronostico Cerrado
                     </span>
-                    {partido.visitante}
-                  </h2>
-
-                  <p className="mt-2 text-sm text-slate-500">
-                    🕒 {formatearHora(partido.fechaPartido)}
-                  </p>
-
-                  <p className="mt-2 text-sm font-semibold text-slate-700">
-                    🎯 Mi pronóstico:{" "}
-                    {partido.pronostico
-                      ? `${partido.pronostico.golesLocal} - ${partido.pronostico.golesVisitante}`
-                      : "Sin pronóstico"}
-                  </p>
+                  ) : (
+                    <button
+                      onClick={() => setPartidoSeleccionado(partido)}
+                      className="rounded-xl bg-gradient-to-r from-red-600 to-green-600 px-5 py-2 text-center font-bold text-white shadow-md"
+                    >
+                      {partido.pronostico ? "Editar" : "Pronosticar"}
+                    </button>
+                  )}
                 </div>
-
-                <Link
-                  to="/mis-pronosticos"
-                  className="rounded-xl bg-gradient-to-r from-red-600 to-green-600 px-5 py-2 text-center font-bold text-white shadow-md"
-                >
-                  {partido.pronostico ? "Editar" : "Pronosticar"}
-                </Link>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
 
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-2xl bg-white p-4 text-center shadow-sm border border-slate-200">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
             <p className="text-2xl font-black text-slate-800">
               {totalPartidos}
             </p>
-            <p className="text-sm text-slate-500">
-              Partidos
-            </p>
+            <p className="text-sm text-slate-500">Partidos</p>
           </div>
 
-          <div className="rounded-2xl bg-white p-4 text-center shadow-sm border border-slate-200">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
             <p className="text-2xl font-black text-green-600">
               {totalPronosticados}
             </p>
-            <p className="text-sm text-slate-500">
-              Hechos
-            </p>
+            <p className="text-sm text-slate-500">Hechos</p>
           </div>
 
-          <div className="rounded-2xl bg-white p-4 text-center shadow-sm border border-slate-200">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
             <p className="text-2xl font-black text-orange-500">
               {totalPendientes}
             </p>
-            <p className="text-sm text-slate-500">
-              Pendientes
-            </p>
+            <p className="text-sm text-slate-500">Pendientes</p>
           </div>
         </div>
 
@@ -251,9 +268,7 @@ export default function Home() {
               </div>
 
               <div className="text-right">
-                <p className="text-xs text-slate-500">
-                  Cierra en
-                </p>
+                <p className="text-xs text-slate-500">Cierra en</p>
 
                 <p className="text-2xl font-black text-red-600">
                   {tiempoRestante(proximoPartido.fechaPartido)}
@@ -263,6 +278,38 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {partidoSeleccionado && perfil && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-black text-slate-800">
+                Pronosticar partido
+              </h2>
+
+              <button
+                onClick={() => setPartidoSeleccionado(null)}
+                className="rounded-lg bg-slate-100 px-3 py-1 font-bold text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="mb-4 text-center font-bold text-slate-800">
+              {partidoSeleccionado.local} vs {partidoSeleccionado.visitante}
+            </p>
+
+            <PrediccionForm
+              partidoId={partidoSeleccionado.id}
+              usuario={perfil}
+              onGuardado={() => {
+                setPartidoSeleccionado(null);
+                cargarPartidos();
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
