@@ -13,7 +13,6 @@ import {
 import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { calcularPuntosPorPartido } from "../services/tablaPosicionesService";
 
 export default function AdminPartidos() {
@@ -141,113 +140,199 @@ export default function AdminPartidos() {
         }
     };
 
+    const convertirFecha = (fecha: any) => {
+        if (fecha?.toDate) {
+            return fecha.toDate();
+        }
+
+        return new Date(fecha);
+    };
+
     const generarReportePDF = async () => {
         if (!fechaReporte) {
             alert("Selecciona una fecha para generar el reporte");
             return;
         }
 
-        try {
-            const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
-            const prediccionesSnapshot = await getDocs(collection(db, "predicciones"));
-
-            const usuarios = usuariosSnapshot.docs.map((documento) => ({
-                id: documento.id,
-                ...documento.data(),
-            })) as any[];
-
-            const predicciones = prediccionesSnapshot.docs.map((documento) => ({
-                id: documento.id,
-                ...documento.data(),
-            })) as any[];
-
-            const partidosFinalizados = partidos.filter((partido) => {
-                const fecha = partido.fechaPartido?.toDate?.();
-                if (!fecha) return false;
-
-                const fechaTexto = fecha.toISOString().slice(0, 10);
-
-                return partido.estado === "finalizado" && fechaTexto === fechaReporte;
-            });
-
-            if (partidosFinalizados.length === 0) {
-                alert("No hay partidos finalizados para esa fecha");
-                return;
+        const calcularPuntosReporte = (partido: any, prediccion: any) => {
+            if (
+                partido.resultadoLocal === null ||
+                partido.resultadoLocal === undefined ||
+                partido.resultadoVisitante === null ||
+                partido.resultadoVisitante === undefined
+            ) {
+                return 0;
             }
 
-            const filas = usuarios.map((usuario) => {
-                let puntos = 0;
-                let prediccionesRealizadas = 0;
+            const realLocal = Number(partido.resultadoLocal);
+            const realVisitante = Number(partido.resultadoVisitante);
+            const predLocal = Number(prediccion.golesLocal);
+            const predVisitante = Number(prediccion.golesVisitante);
 
-                partidosFinalizados.forEach((partido) => {
-                    const prediccion = predicciones.find(
-                        (p) => p.usuarioId === usuario.id && p.partidoId === partido.id
-                    );
+            if (predLocal === realLocal && predVisitante === realVisitante) {
+                return 3;
+            }
 
-                    if (!prediccion) return;
+            const resultadoReal =
+                realLocal === realVisitante
+                    ? "EMPATE"
+                    : realLocal > realVisitante
+                        ? "LOCAL"
+                        : "VISITANTE";
 
-                    prediccionesRealizadas++;
+            const resultadoPrediccion =
+                predLocal === predVisitante
+                    ? "EMPATE"
+                    : predLocal > predVisitante
+                        ? "LOCAL"
+                        : "VISITANTE";
 
-                    const acertoMarcadorExacto =
-                        Number(prediccion.golesLocal) === Number(partido.resultadoLocal) &&
-                        Number(prediccion.golesVisitante) ===
-                        Number(partido.resultadoVisitante);
+            return resultadoReal === resultadoPrediccion ? 1 : 0;
+        };
 
-                    const acertoResultado =
-                        (Number(prediccion.golesLocal) >
-                            Number(prediccion.golesVisitante) &&
-                            Number(partido.resultadoLocal) >
-                            Number(partido.resultadoVisitante)) ||
-                        (Number(prediccion.golesLocal) <
-                            Number(prediccion.golesVisitante) &&
-                            Number(partido.resultadoLocal) <
-                            Number(partido.resultadoVisitante)) ||
-                        (Number(prediccion.golesLocal) ===
-                            Number(prediccion.golesVisitante) &&
-                            Number(partido.resultadoLocal) ===
-                            Number(partido.resultadoVisitante));
+        const doc = new jsPDF();
 
-                    if (acertoMarcadorExacto) {
-                        puntos += 3;
-                    } else if (acertoResultado) {
-                        puntos += 1;
-                    }
-                });
+        const fechaSeleccionada = new Date(`${fechaReporte}T00:00:00`);
 
-                return [
-                    usuario.nombre || usuario.email || "Usuario",
-                    prediccionesRealizadas,
-                    puntos,
-                ];
-            });
+        const partidosDelDia = partidos.filter((partido) => {
+            const fechaPartido = convertirFecha(partido.fechaPartido);
 
-            const docPDF = new jsPDF();
+            return (
+                fechaPartido.getFullYear() === fechaSeleccionada.getFullYear() &&
+                fechaPartido.getMonth() === fechaSeleccionada.getMonth() &&
+                fechaPartido.getDate() === fechaSeleccionada.getDate()
+            );
+        });
 
-            const logo = "/logo-d3.png";
-
-            docPDF.addImage(logo, "PNG", 14, 10, 24, 24);
-
-            docPDF.setFontSize(18);
-            docPDF.text("D3 Predicts", 44, 18);
-
-            docPDF.setFontSize(12);
-            docPDF.text("Reporte de Pronósticos", 44, 26);
-
-            docPDF.setFontSize(10);
-            docPDF.text(`Fecha del reporte: ${fechaReporte}`, 44, 33);
-            docPDF.text(`Generado: ${new Date().toLocaleString()}`, 44, 39);
-
-            autoTable(docPDF, {
-                startY: 48,
-                head: [["Usuario", "Pronósticos", "Puntos"]],
-                body: filas,
-            });
-
-            docPDF.save(`reporte-pronosticos-${fechaReporte}.pdf`);
-        } catch (error) {
-            console.error(error);
-            alert("Error al generar el reporte PDF");
+        if (partidosDelDia.length === 0) {
+            alert("No hay partidos para la fecha seleccionada");
+            return;
         }
+
+        let y = 20;
+
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("D3 Predicts", 20, y);
+
+        y += 10;
+        doc.setFontSize(13);
+        doc.setFont("helvetica", "normal");
+        doc.text("Reporte de Pronósticos", 20, y);
+
+        y += 8;
+        doc.setFontSize(10);
+        doc.text(`Fecha del reporte: ${fechaReporte}`, 20, y);
+        doc.text(`Generado: ${new Date().toLocaleString()}`, 20, y + 6);
+
+        y += 20;
+
+        for (const partido of partidosDelDia) {
+            const prediccionesSnap = await getDocs(
+                query(
+                    collection(db, "predicciones"),
+                    where("partidoId", "==", partido.id)
+                )
+            );
+
+            const predicciones = prediccionesSnap.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            })) as any[];
+
+            if (y > 245) {
+                doc.addPage();
+                y = 20;
+            }
+
+            const golesLocal = partido.resultadoLocal ?? "-";
+            const golesVisitante = partido.resultadoVisitante ?? "-";
+
+            doc.setFillColor(41, 128, 185);
+            doc.rect(20, y, 170, 8, "F");
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text(`${partido.local} vs ${partido.visitante}`, 23, y + 5.5);
+
+            y += 14;
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text("Resultado oficial:", 20, y);
+
+            y += 8;
+
+            doc.setFont("helvetica", "normal");
+            doc.text(
+                `${partido.local} ${golesLocal} - ${golesVisitante} ${partido.visitante}`,
+                25,
+                y
+            );
+
+            y += 12;
+
+            doc.setFillColor(41, 128, 185);
+            doc.rect(20, y, 170, 8, "F");
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.text("Usuario", 23, y + 5.5);
+            doc.text("Pronóstico", 85, y + 5.5);
+            doc.text("Puntos", 165, y + 5.5);
+
+            y += 8;
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "normal");
+
+            if (predicciones.length === 0) {
+                doc.text("Sin predicciones registradas", 23, y + 6);
+                y += 10;
+            } else {
+                predicciones.forEach((prediccion, index) => {
+                    if (y > 275) {
+                        doc.addPage();
+                        y = 20;
+                    }
+
+                    const puntos = calcularPuntosReporte(partido, prediccion);
+
+                    const usuario =
+                        prediccion.nombreUsuario ||
+                        prediccion.usuarioEmail ||
+                        prediccion.email ||
+                        prediccion.usuarioId ||
+                        "Usuario";
+
+                    const predLocal = prediccion.golesLocal ?? "-";
+                    const predVisitante = prediccion.golesVisitante ?? "-";
+
+                    if (index % 2 === 0) {
+                        doc.setFillColor(245, 245, 245);
+                        doc.rect(20, y, 170, 8, "F");
+                    }
+
+                    doc.setFontSize(9);
+                    doc.text(String(usuario), 23, y + 5.5);
+                    doc.text(
+                        `${partido.local} ${predLocal} - ${predVisitante} ${partido.visitante}`,
+                        85,
+                        y + 5.5
+                    );
+                    doc.text(String(puntos), 167, y + 5.5);
+
+                    y += 8;
+                });
+            }
+
+            y += 14;
+        }
+
+        doc.save(`reporte-pronosticos-${fechaReporte}.pdf`);
     };
 
     const verFaltantes = async (partido: any) => {
