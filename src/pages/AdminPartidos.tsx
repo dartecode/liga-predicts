@@ -14,6 +14,7 @@ import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { calcularPuntosPorPartido } from "../services/tablaPosicionesService";
 
 export default function AdminPartidos() {
     const { perfil, cargando: cargandoAuth } = useAuth();
@@ -114,25 +115,29 @@ export default function AdminPartidos() {
 
     const guardarResultado = async (
         partidoId: string,
-        golesLocal: string,
-        golesVisitante: string
+        resultadoLocal: string,
+        resultadoVisitante: string
     ) => {
-        if (golesLocal === "" || golesVisitante === "") {
+        if (resultadoLocal === "" || resultadoVisitante === "") {
             alert("Ingresa ambos resultados");
             return;
         }
 
         try {
             await updateDoc(doc(db, "partidos", partidoId), {
-                golesLocal: Number(golesLocal),
-                golesVisitante: Number(golesVisitante),
+                resultadoLocal: Number(resultadoLocal),
+                resultadoVisitante: Number(resultadoVisitante),
                 estado: "finalizado",
             });
 
+            await calcularPuntosPorPartido(partidoId);
+
             await cargarPartidos();
+
+            alert("Resultado guardado y tabla de posiciones actualizada");
         } catch (error) {
             console.error(error);
-            alert("Error al guardar resultado");
+            alert("Error al guardar resultado o calcular puntos");
         }
     };
 
@@ -184,16 +189,23 @@ export default function AdminPartidos() {
                     prediccionesRealizadas++;
 
                     const acertoMarcadorExacto =
-                        prediccion.golesLocal === partido.golesLocal &&
-                        prediccion.golesVisitante === partido.golesVisitante;
+                        Number(prediccion.golesLocal) === Number(partido.resultadoLocal) &&
+                        Number(prediccion.golesVisitante) ===
+                        Number(partido.resultadoVisitante);
 
                     const acertoResultado =
-                        (prediccion.golesLocal > prediccion.golesVisitante &&
-                            partido.golesLocal > partido.golesVisitante) ||
-                        (prediccion.golesLocal < prediccion.golesVisitante &&
-                            partido.golesLocal < partido.golesVisitante) ||
-                        (prediccion.golesLocal === prediccion.golesVisitante &&
-                            partido.golesLocal === partido.golesVisitante);
+                        (Number(prediccion.golesLocal) >
+                            Number(prediccion.golesVisitante) &&
+                            Number(partido.resultadoLocal) >
+                            Number(partido.resultadoVisitante)) ||
+                        (Number(prediccion.golesLocal) <
+                            Number(prediccion.golesVisitante) &&
+                            Number(partido.resultadoLocal) <
+                            Number(partido.resultadoVisitante)) ||
+                        (Number(prediccion.golesLocal) ===
+                            Number(prediccion.golesVisitante) &&
+                            Number(partido.resultadoLocal) ===
+                            Number(partido.resultadoVisitante));
 
                     if (acertoMarcadorExacto) {
                         puntos += 3;
@@ -451,20 +463,21 @@ function PartidoAdminCard({
     numero: number;
     onGuardar: (
         partidoId: string,
-        golesLocal: string,
-        golesVisitante: string
+        resultadoLocal: string,
+        resultadoVisitante: string
     ) => void;
     onVerFaltantes: (partido: any) => void;
 }) {
-    const [golesLocal, setGolesLocal] = useState(
-        partido.golesLocal !== null && partido.golesLocal !== undefined
-            ? String(partido.golesLocal)
+    const [resultadoLocal, setResultadoLocal] = useState(
+        partido.resultadoLocal !== null && partido.resultadoLocal !== undefined
+            ? String(partido.resultadoLocal)
             : ""
     );
 
-    const [golesVisitante, setGolesVisitante] = useState(
-        partido.golesVisitante !== null && partido.golesVisitante !== undefined
-            ? String(partido.golesVisitante)
+    const [resultadoVisitante, setResultadoVisitante] = useState(
+        partido.resultadoVisitante !== null &&
+            partido.resultadoVisitante !== undefined
+            ? String(partido.resultadoVisitante)
             : ""
     );
 
@@ -491,8 +504,8 @@ function PartidoAdminCard({
                         <input
                             type="number"
                             min="0"
-                            value={golesLocal}
-                            onChange={(e) => setGolesLocal(e.target.value)}
+                            value={resultadoLocal}
+                            onChange={(e) => setResultadoLocal(e.target.value)}
                             className="w-24 rounded-xl border border-slate-300 px-4 py-3 text-center"
                         />
 
@@ -501,14 +514,16 @@ function PartidoAdminCard({
                         <input
                             type="number"
                             min="0"
-                            value={golesVisitante}
-                            onChange={(e) => setGolesVisitante(e.target.value)}
+                            value={resultadoVisitante}
+                            onChange={(e) => setResultadoVisitante(e.target.value)}
                             className="w-24 rounded-xl border border-slate-300 px-4 py-3 text-center"
                         />
                     </div>
 
                     <button
-                        onClick={() => onGuardar(partido.id, golesLocal, golesVisitante)}
+                        onClick={() =>
+                            onGuardar(partido.id, resultadoLocal, resultadoVisitante)
+                        }
                         className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
                     >
                         Guardar

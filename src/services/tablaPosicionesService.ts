@@ -77,6 +77,22 @@ export async function calcularPuntosPorPartido(partidoId: string) {
 }
 
 export async function recalcularTablaPosiciones() {
+    const partidosSnap = await getDocs(collection(db, "partidos"));
+
+    const partidosFinalizados = partidosSnap.docs
+        .filter((docu) => {
+            const partido = docu.data();
+
+            return (
+                partido.estado === "finalizado" &&
+                partido.resultadoLocal !== null &&
+                partido.resultadoLocal !== undefined &&
+                partido.resultadoVisitante !== null &&
+                partido.resultadoVisitante !== undefined
+            );
+        })
+        .map((docu) => docu.id);
+
     const snap = await getDocs(collection(db, "predicciones"));
 
     const tabla: Record<string, any> = {};
@@ -84,6 +100,7 @@ export async function recalcularTablaPosiciones() {
     snap.forEach((documento) => {
         const prediccion = documento.data();
 
+        if (!partidosFinalizados.includes(prediccion.partidoId)) return;
         if (prediccion.puntos === undefined) return;
 
         if (!tabla[prediccion.usuarioId]) {
@@ -99,9 +116,15 @@ export async function recalcularTablaPosiciones() {
         }
 
         tabla[prediccion.usuarioId].puntos += prediccion.puntos;
+
         tabla[prediccion.usuarioId].exactos += prediccion.resultadoExacto ? 1 : 0;
-        tabla[prediccion.usuarioId].acertados += prediccion.partidoAcertado ? 1 : 0;
-        tabla[prediccion.usuarioId].fallados += prediccion.partidoAcertado ? 0 : 1;
+
+        tabla[prediccion.usuarioId].acertados +=
+            !prediccion.resultadoExacto && prediccion.partidoAcertado ? 1 : 0;
+
+        tabla[prediccion.usuarioId].fallados +=
+            !prediccion.resultadoExacto && !prediccion.partidoAcertado ? 1 : 0;
+
         tabla[prediccion.usuarioId].pronosticos += 1;
     });
 
