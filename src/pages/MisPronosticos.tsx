@@ -63,7 +63,7 @@ export default function MisPronosticos() {
       const partidosFiltrados = partidosConPronostico.filter((partido) => {
         const fechaPartido = convertirFecha(partido.fechaPartido);
 
-        return fechaPartido > ahora || partido.pronostico;
+        return fechaPartido > ahora;
       });
 
       setPartidos(partidosFiltrados);
@@ -203,17 +203,16 @@ export default function MisPronosticos() {
                           setPartidoSeleccionado(partido);
                         }}
                         disabled={bloqueado}
-                        className={`rounded-xl px-5 py-2 font-bold shadow-sm transition ${
-                          bloqueado
+                        className={`rounded-xl px-5 py-2 font-bold shadow-sm transition ${bloqueado
                             ? "cursor-not-allowed bg-slate-300 text-slate-500"
                             : "bg-blue-600 text-white hover:bg-blue-700"
-                        }`}
+                          }`}
                       >
                         {bloqueado
                           ? "Pronóstico cerrado"
                           : partido.pronostico
-                          ? "Editar"
-                          : "Pronosticar"}
+                            ? "Editar"
+                            : "Pronosticar"}
                       </button>
                     </div>
                   </div>
