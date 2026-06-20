@@ -102,9 +102,21 @@ export default function TablaPosiciones() {
 
                 data.sort((a, b) => {
                     if (b.puntos !== a.puntos) return b.puntos - a.puntos;
-                    if (b.exactos !== a.exactos) return b.exactos - a.exactos;
+
+                    if (b.exactos !== a.exactos) {
+                        return b.exactos - a.exactos;
+                    }
+
                     if (b.acertados !== a.acertados) {
                         return b.acertados - a.acertados;
+                    }
+
+                    if (a.fallados !== b.fallados) {
+                        return a.fallados - b.fallados;
+                    }
+
+                    if (a.pronosticos !== b.pronosticos) {
+                        return a.pronosticos - b.pronosticos;
                     }
 
                     return a.nombreUsuario.localeCompare(b.nombreUsuario);
@@ -211,6 +223,7 @@ export default function TablaPosiciones() {
                                 <li>Mayor cantidad de puntos.</li>
                                 <li>Mayor cantidad de resultados exactos.</li>
                                 <li>Mayor cantidad de resultados acertados.</li>
+                                <li>Menor cantidad de resultados fallados.</li>
                             </ol>
                         </div>
                     </>
