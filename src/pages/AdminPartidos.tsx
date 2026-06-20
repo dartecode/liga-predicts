@@ -15,6 +15,52 @@ import { useAuth } from "../context/AuthContext";
 import jsPDF from "jspdf";
 import { calcularPuntosPorPartido } from "../services/tablaPosicionesService";
 
+const AdminPartidosSkeleton = () => {
+    return (
+        <div className="min-h-screen bg-slate-100 p-6">
+            <div className="mx-auto max-w-6xl space-y-6 animate-pulse">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="h-9 w-72 rounded bg-slate-200" />
+
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                        <div className="h-12 w-40 rounded-xl bg-slate-200" />
+                        <div className="h-12 w-28 rounded-xl bg-slate-200" />
+                        <div className="h-12 w-44 rounded-xl bg-slate-200" />
+                    </div>
+                </div>
+
+                <div className="space-y-5">
+                    {[1, 2, 3, 4].map((item) => (
+                        <div
+                            key={item}
+                            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                        >
+                            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                                <div className="space-y-3">
+                                    <div className="h-5 w-24 rounded bg-slate-200" />
+                                    <div className="h-4 w-32 rounded bg-slate-200" />
+                                    <div className="h-8 w-72 rounded bg-slate-200" />
+                                </div>
+
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-12 w-24 rounded-xl bg-slate-200" />
+                                        <div className="h-5 w-4 rounded bg-slate-200" />
+                                        <div className="h-12 w-24 rounded-xl bg-slate-200" />
+                                    </div>
+
+                                    <div className="h-12 w-28 rounded-xl bg-slate-200" />
+                                    <div className="h-12 w-36 rounded-xl bg-slate-200" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default function AdminPartidos() {
     const { perfil, cargando: cargandoAuth } = useAuth();
 
@@ -37,10 +83,7 @@ export default function AdminPartidos() {
         try {
             setCargando(true);
 
-            const q = query(
-                collection(db, "partidos"),
-                orderBy("fechaPartido", "asc")
-            );
+            const q = query(collection(db, "partidos"), orderBy("fechaPartido", "asc"));
 
             const snapshot = await getDocs(q);
 
@@ -190,7 +233,7 @@ export default function AdminPartidos() {
             return resultadoReal === resultadoPrediccion ? 1 : 0;
         };
 
-        const doc = new jsPDF();
+        const docPdf = new jsPDF();
 
         const fechaSeleccionada = new Date(`${fechaReporte}T00:00:00`);
 
@@ -211,28 +254,25 @@ export default function AdminPartidos() {
 
         let y = 20;
 
-        doc.setFontSize(18);
-        doc.setFont("helvetica", "bold");
-        doc.text("D3 Predicts", 20, y);
+        docPdf.setFontSize(18);
+        docPdf.setFont("helvetica", "bold");
+        docPdf.text("D3 Predicts", 20, y);
 
         y += 10;
-        doc.setFontSize(13);
-        doc.setFont("helvetica", "normal");
-        doc.text("Reporte de Pronósticos", 20, y);
+        docPdf.setFontSize(13);
+        docPdf.setFont("helvetica", "normal");
+        docPdf.text("Reporte de Pronósticos", 20, y);
 
         y += 8;
-        doc.setFontSize(10);
-        doc.text(`Fecha del reporte: ${fechaReporte}`, 20, y);
-        doc.text(`Generado: ${new Date().toLocaleString()}`, 20, y + 6);
+        docPdf.setFontSize(10);
+        docPdf.text(`Fecha del reporte: ${fechaReporte}`, 20, y);
+        docPdf.text(`Generado: ${new Date().toLocaleString()}`, 20, y + 6);
 
         y += 20;
 
         for (const partido of partidosDelDia) {
             const prediccionesSnap = await getDocs(
-                query(
-                    collection(db, "predicciones"),
-                    where("partidoId", "==", partido.id)
-                )
+                query(collection(db, "predicciones"), where("partidoId", "==", partido.id))
             );
 
             const predicciones = prediccionesSnap.docs.map((doc) => ({
@@ -241,32 +281,32 @@ export default function AdminPartidos() {
             })) as any[];
 
             if (y > 245) {
-                doc.addPage();
+                docPdf.addPage();
                 y = 20;
             }
 
             const golesLocal = partido.resultadoLocal ?? "-";
             const golesVisitante = partido.resultadoVisitante ?? "-";
 
-            doc.setFillColor(41, 128, 185);
-            doc.rect(20, y, 170, 8, "F");
+            docPdf.setFillColor(41, 128, 185);
+            docPdf.rect(20, y, 170, 8, "F");
 
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "bold");
-            doc.text(`${partido.local} vs ${partido.visitante}`, 23, y + 5.5);
+            docPdf.setTextColor(255, 255, 255);
+            docPdf.setFontSize(11);
+            docPdf.setFont("helvetica", "bold");
+            docPdf.text(`${partido.local} vs ${partido.visitante}`, 23, y + 5.5);
 
             y += 14;
 
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "bold");
-            doc.text("Resultado oficial:", 20, y);
+            docPdf.setTextColor(0, 0, 0);
+            docPdf.setFontSize(11);
+            docPdf.setFont("helvetica", "bold");
+            docPdf.text("Resultado oficial:", 20, y);
 
             y += 8;
 
-            doc.setFont("helvetica", "normal");
-            doc.text(
+            docPdf.setFont("helvetica", "normal");
+            docPdf.text(
                 `${partido.local} ${golesLocal} - ${golesVisitante} ${partido.visitante}`,
                 25,
                 y
@@ -274,28 +314,28 @@ export default function AdminPartidos() {
 
             y += 12;
 
-            doc.setFillColor(41, 128, 185);
-            doc.rect(20, y, 170, 8, "F");
+            docPdf.setFillColor(41, 128, 185);
+            docPdf.rect(20, y, 170, 8, "F");
 
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "bold");
-            doc.text("Usuario", 23, y + 5.5);
-            doc.text("Pronóstico", 85, y + 5.5);
-            doc.text("Puntos", 165, y + 5.5);
+            docPdf.setTextColor(255, 255, 255);
+            docPdf.setFontSize(10);
+            docPdf.setFont("helvetica", "bold");
+            docPdf.text("Usuario", 23, y + 5.5);
+            docPdf.text("Pronóstico", 85, y + 5.5);
+            docPdf.text("Puntos", 165, y + 5.5);
 
             y += 8;
 
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("helvetica", "normal");
+            docPdf.setTextColor(0, 0, 0);
+            docPdf.setFont("helvetica", "normal");
 
             if (predicciones.length === 0) {
-                doc.text("Sin predicciones registradas", 23, y + 6);
+                docPdf.text("Sin predicciones registradas", 23, y + 6);
                 y += 10;
             } else {
                 predicciones.forEach((prediccion, index) => {
                     if (y > 275) {
-                        doc.addPage();
+                        docPdf.addPage();
                         y = 20;
                     }
 
@@ -312,18 +352,18 @@ export default function AdminPartidos() {
                     const predVisitante = prediccion.golesVisitante ?? "-";
 
                     if (index % 2 === 0) {
-                        doc.setFillColor(245, 245, 245);
-                        doc.rect(20, y, 170, 8, "F");
+                        docPdf.setFillColor(245, 245, 245);
+                        docPdf.rect(20, y, 170, 8, "F");
                     }
 
-                    doc.setFontSize(9);
-                    doc.text(String(usuario), 23, y + 5.5);
-                    doc.text(
+                    docPdf.setFontSize(9);
+                    docPdf.text(String(usuario), 23, y + 5.5);
+                    docPdf.text(
                         `${partido.local} ${predLocal} - ${predVisitante} ${partido.visitante}`,
                         85,
                         y + 5.5
                     );
-                    doc.text(String(puntos), 167, y + 5.5);
+                    docPdf.text(String(puntos), 167, y + 5.5);
 
                     y += 8;
                 });
@@ -332,7 +372,7 @@ export default function AdminPartidos() {
             y += 14;
         }
 
-        doc.save(`reporte-pronosticos-${fechaReporte}.pdf`);
+        docPdf.save(`reporte-pronosticos-${fechaReporte}.pdf`);
     };
 
     const verFaltantes = async (partido: any) => {
@@ -345,10 +385,7 @@ export default function AdminPartidos() {
             })) as any[];
 
             const prediccionesSnapshot = await getDocs(
-                query(
-                    collection(db, "predicciones"),
-                    where("partidoId", "==", partido.id)
-                )
+                query(collection(db, "predicciones"), where("partidoId", "==", partido.id))
             );
 
             const usuariosConPrediccion = prediccionesSnapshot.docs.map(
@@ -387,153 +424,163 @@ Por favor ingresar a la app y guardar su pronóstico antes de que inicie el part
     };
 
     if (cargandoAuth || cargando) {
-        return <p className="p-6">Cargando...</p>;
+        return <AdminPartidosSkeleton />;
     }
 
     if (perfil?.rol !== "admin") {
         return (
-            <div className="p-6">
-                <h1 className="text-2xl font-bold text-red-600">
-                    No tienes permisos para acceder
-                </h1>
+            <div className="min-h-screen bg-slate-100 p-6">
+                <div className="mx-auto max-w-5xl rounded-2xl bg-white p-6 shadow-sm">
+                    <h1 className="text-2xl font-bold text-red-600">
+                        No tienes permisos para acceder
+                    </h1>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="p-6">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h1 className="text-3xl font-bold text-slate-900">
-                    Administrar partidos
-                </h1>
+        <div className="min-h-screen bg-slate-100 p-4 md:p-6">
+            <div className="mx-auto max-w-6xl">
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <h1 className="text-3xl font-bold text-slate-900">
+                        Administrar partidos
+                    </h1>
 
-                <div className="flex flex-col gap-3 sm:flex-row">
-                    <input
-                        type="date"
-                        value={fechaReporte}
-                        onChange={(e) => setFechaReporte(e.target.value)}
-                        className="rounded-xl border border-slate-300 px-4 py-3"
-                    />
-
-                    <button
-                        onClick={generarReportePDF}
-                        className="rounded-xl bg-slate-800 px-6 py-3 font-bold text-white hover:bg-slate-900"
-                    >
-                        Reporte
-                    </button>
-
-                    <button
-                        onClick={() => setMostrarFormulario(!mostrarFormulario)}
-                        className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
-                    >
-                        + Agregar partido
-                    </button>
-                </div>
-            </div>
-
-            {mostrarFormulario && (
-                <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="mb-4 text-xl font-bold text-slate-900">
-                        Nuevo partido
-                    </h2>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <input
-                            value={local}
-                            onChange={(e) => setLocal(e.target.value)}
-                            placeholder="Equipo local"
-                            className="rounded-xl border border-slate-300 px-4 py-3"
-                        />
-
-                        <input
-                            value={visitante}
-                            onChange={(e) => setVisitante(e.target.value)}
-                            placeholder="Equipo visitante"
-                            className="rounded-xl border border-slate-300 px-4 py-3"
-                        />
-
+                    <div className="flex flex-col gap-3 sm:flex-row">
                         <input
                             type="date"
-                            value={fechaPartido}
-                            onChange={(e) => setFechaPartido(e.target.value)}
-                            className="rounded-xl border border-slate-300 px-4 py-3"
+                            value={fechaReporte}
+                            onChange={(e) => setFechaReporte(e.target.value)}
+                            className="rounded-xl border border-slate-300 bg-white px-4 py-3"
                         />
-
-                        <input
-                            type="time"
-                            value={horaPartido}
-                            onChange={(e) => setHoraPartido(e.target.value)}
-                            className="rounded-xl border border-slate-300 px-4 py-3"
-                        />
-                    </div>
-
-                    <button
-                        onClick={agregarPartido}
-                        className="mt-5 rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
-                    >
-                        Guardar partido
-                    </button>
-                </div>
-            )}
-
-            <div className="space-y-5">
-                {partidos.map((partido, index) => (
-                    <PartidoAdminCard
-                        key={partido.id}
-                        partido={partido}
-                        numero={index + 1}
-                        onGuardar={guardarResultado}
-                        onVerFaltantes={verFaltantes}
-                    />
-                ))}
-            </div>
-
-            {mostrarFaltantes && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-                        <h2 className="text-xl font-bold text-slate-900">
-                            Usuarios pendientes
-                        </h2>
-
-                        <p className="mt-2 text-slate-600">
-                            {partidoFaltantes?.local} vs {partidoFaltantes?.visitante}
-                        </p>
-
-                        <div className="mt-4 space-y-2">
-                            {usuariosFaltantes.length === 0 ? (
-                                <p className="rounded-xl bg-green-50 p-3 font-semibold text-green-700">
-                                    Todos ya enviaron su predicción ✅
-                                </p>
-                            ) : (
-                                usuariosFaltantes.map((usuario) => (
-                                    <div
-                                        key={usuario.id}
-                                        className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700"
-                                    >
-                                        {usuario.nombre || usuario.email || usuario.id}
-                                    </div>
-                                ))
-                            )}
-                        </div>
-
-                        {usuariosFaltantes.length > 0 && (
-                            <button
-                                onClick={copiarRecordatorio}
-                                className="mt-5 w-full rounded-xl bg-orange-500 py-3 font-bold text-white hover:bg-orange-600"
-                            >
-                                Copiar recordatorio
-                            </button>
-                        )}
 
                         <button
-                            onClick={() => setMostrarFaltantes(false)}
-                            className="mt-3 w-full rounded-xl bg-slate-800 py-3 font-bold text-white hover:bg-slate-900"
+                            onClick={generarReportePDF}
+                            className="rounded-xl bg-slate-800 px-6 py-3 font-bold text-white transition hover:bg-slate-900"
                         >
-                            Cerrar
+                            Reporte
+                        </button>
+
+                        <button
+                            onClick={() => setMostrarFormulario(!mostrarFormulario)}
+                            className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white transition hover:bg-blue-700"
+                        >
+                            + Agregar partido
                         </button>
                     </div>
                 </div>
-            )}
+
+                {mostrarFormulario && (
+                    <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h2 className="mb-4 text-xl font-bold text-slate-900">
+                            Nuevo partido
+                        </h2>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <input
+                                value={local}
+                                onChange={(e) => setLocal(e.target.value)}
+                                placeholder="Equipo local"
+                                className="rounded-xl border border-slate-300 px-4 py-3"
+                            />
+
+                            <input
+                                value={visitante}
+                                onChange={(e) => setVisitante(e.target.value)}
+                                placeholder="Equipo visitante"
+                                className="rounded-xl border border-slate-300 px-4 py-3"
+                            />
+
+                            <input
+                                type="date"
+                                value={fechaPartido}
+                                onChange={(e) => setFechaPartido(e.target.value)}
+                                className="rounded-xl border border-slate-300 px-4 py-3"
+                            />
+
+                            <input
+                                type="time"
+                                value={horaPartido}
+                                onChange={(e) => setHoraPartido(e.target.value)}
+                                className="rounded-xl border border-slate-300 px-4 py-3"
+                            />
+                        </div>
+
+                        <button
+                            onClick={agregarPartido}
+                            className="mt-5 rounded-xl bg-blue-600 px-6 py-3 font-bold text-white transition hover:bg-blue-700"
+                        >
+                            Guardar partido
+                        </button>
+                    </div>
+                )}
+
+                {partidos.length === 0 ? (
+                    <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-slate-600 shadow-sm">
+                        No hay partidos registrados.
+                    </div>
+                ) : (
+                    <div className="space-y-5">
+                        {partidos.map((partido, index) => (
+                            <PartidoAdminCard
+                                key={partido.id}
+                                partido={partido}
+                                numero={index + 1}
+                                onGuardar={guardarResultado}
+                                onVerFaltantes={verFaltantes}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {mostrarFaltantes && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                            <h2 className="text-xl font-bold text-slate-900">
+                                Usuarios pendientes
+                            </h2>
+
+                            <p className="mt-2 text-slate-600">
+                                {partidoFaltantes?.local} vs {partidoFaltantes?.visitante}
+                            </p>
+
+                            <div className="mt-4 space-y-2">
+                                {usuariosFaltantes.length === 0 ? (
+                                    <p className="rounded-xl bg-green-50 p-3 font-semibold text-green-700">
+                                        Todos ya enviaron su predicción ✅
+                                    </p>
+                                ) : (
+                                    usuariosFaltantes.map((usuario) => (
+                                        <div
+                                            key={usuario.id}
+                                            className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700"
+                                        >
+                                            {usuario.nombre || usuario.email || usuario.id}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {usuariosFaltantes.length > 0 && (
+                                <button
+                                    onClick={copiarRecordatorio}
+                                    className="mt-5 w-full rounded-xl bg-orange-500 py-3 font-bold text-white transition hover:bg-orange-600"
+                                >
+                                    Copiar recordatorio
+                                </button>
+                            )}
+
+                            <button
+                                onClick={() => setMostrarFaltantes(false)}
+                                className="mt-3 w-full rounded-xl bg-slate-800 py-3 font-bold text-white transition hover:bg-slate-900"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -560,14 +607,13 @@ function PartidoAdminCard({
     );
 
     const [resultadoVisitante, setResultadoVisitante] = useState(
-        partido.resultadoVisitante !== null &&
-            partido.resultadoVisitante !== undefined
+        partido.resultadoVisitante !== null && partido.resultadoVisitante !== undefined
             ? String(partido.resultadoVisitante)
             : ""
     );
 
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <p className="font-bold text-blue-600">Partido #{numero}</p>
@@ -606,17 +652,15 @@ function PartidoAdminCard({
                     </div>
 
                     <button
-                        onClick={() =>
-                            onGuardar(partido.id, resultadoLocal, resultadoVisitante)
-                        }
-                        className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
+                        onClick={() => onGuardar(partido.id, resultadoLocal, resultadoVisitante)}
+                        className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white transition hover:bg-blue-700"
                     >
                         Guardar
                     </button>
 
                     <button
                         onClick={() => onVerFaltantes(partido)}
-                        className="rounded-xl bg-orange-500 px-6 py-3 font-bold text-white hover:bg-orange-600"
+                        className="rounded-xl bg-orange-500 px-6 py-3 font-bold text-white transition hover:bg-orange-600"
                     >
                         Ver faltantes
                     </button>

@@ -123,6 +123,46 @@ export default function MisPronosticos() {
     {}
   );
 
+  const MisPronosticosSkeleton = () => {
+    return (
+      <div className="space-y-5 animate-pulse">
+        {[1, 2].map((grupo) => (
+          <div key={grupo} className="space-y-3">
+            <div className="rounded-xl bg-slate-200 px-4 py-2">
+              <div className="h-5 w-56 rounded bg-slate-300" />
+            </div>
+
+            {[1, 2].map((item) => (
+              <div
+                key={item}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-3">
+                    <div className="h-4 w-20 rounded bg-slate-200" />
+
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-full bg-slate-200" />
+                      <div className="h-6 w-28 rounded bg-slate-200" />
+                      <div className="h-5 w-8 rounded bg-slate-200" />
+                      <div className="h-7 w-7 rounded-full bg-slate-200" />
+                      <div className="h-6 w-28 rounded bg-slate-200" />
+                    </div>
+
+                    <div className="h-4 w-48 rounded bg-slate-200" />
+                    <div className="h-4 w-40 rounded bg-slate-200" />
+                  </div>
+
+                  <div className="h-10 w-32 rounded-xl bg-slate-200" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-6">
       <div className="mx-auto max-w-4xl space-y-5">
@@ -131,7 +171,7 @@ export default function MisPronosticos() {
         </h1>
 
         {cargando ? (
-          <p className="text-slate-700">Cargando partidos...</p>
+          <MisPronosticosSkeleton />
         ) : Object.keys(partidosAgrupados).length === 0 ? (
           <p className="rounded-2xl bg-white p-5 text-slate-600 shadow-sm">
             No tienes partidos disponibles para pronosticar.
@@ -159,7 +199,7 @@ export default function MisPronosticos() {
                           Partido
                         </p>
 
-                        <h2 className="mt-1 flex items-center gap-2 text-xl font-bold text-slate-800">
+                        <h2 className="mt-1 flex flex-wrap items-center gap-2 text-xl font-bold text-slate-800">
                           <ReactCountryFlag
                             countryCode={BANDERAS[partido.local]}
                             svg
@@ -249,7 +289,8 @@ export default function MisPronosticos() {
               <p className="text-sm text-slate-500">Partido</p>
 
               <h3 className="mt-2 text-lg font-black text-slate-800">
-                {partidoSeleccionado.local} vs {partidoSeleccionado.visitante}
+                {partidoSeleccionado.local} vs{" "}
+                {partidoSeleccionado.visitante}
               </h3>
             </div>
 
