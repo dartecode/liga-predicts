@@ -82,7 +82,6 @@ export default function AdminPartidos() {
     const [agregandoPartido, setAgregandoPartido] = useState(false);
     const [generandoReporte, setGenerandoReporte] = useState(false);
     const [partidoGuardandoId, setPartidoGuardandoId] = useState<string | null>(null);
-    const [partidoFaltantesCargandoId, setPartidoFaltantesCargandoId] = useState<string | null>(null);
 
     const cargarPartidos = async () => {
         try {
