@@ -264,7 +264,7 @@ export default function Home() {
 
                       {bloqueado ? (
                         <span className="rounded-xl bg-slate-300 px-5 py-2 text-center font-bold text-slate-600">
-                          Pronóstico cerrado
+                          Pronóstico bloqueado
                         </span>
                       ) : (
                         <button
