@@ -207,6 +207,22 @@ export default function AdminPartidos() {
         return new Date(fecha);
     };
 
+    const formatearFechaHora = (fecha: any) => {
+        if (!fecha) return "-";
+
+        const fechaConvertida = fecha?.toDate ? fecha.toDate() : new Date(fecha);
+
+        if (isNaN(fechaConvertida.getTime())) return "-";
+
+        return fechaConvertida.toLocaleString("es-EC", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    };
+
     const generarReportePDF = async () => {
         if (generandoReporte) return;
 
@@ -340,10 +356,10 @@ export default function AdminPartidos() {
 
                 docPdf.setTextColor(255, 255, 255);
                 docPdf.setFontSize(10);
-                docPdf.setFont("helvetica", "bold");
                 docPdf.text("Usuario", 23, y + 5.5);
-                docPdf.text("Pronóstico", 85, y + 5.5);
-                docPdf.text("Puntos", 165, y + 5.5);
+                docPdf.text("Pronóstico", 72, y + 5.5);
+                docPdf.text("Fecha/Hora", 135, y + 5.5);
+                docPdf.text("Puntos", 172, y + 5.5);
 
                 y += 8;
 
@@ -377,14 +393,23 @@ export default function AdminPartidos() {
                             docPdf.rect(20, y, 170, 8, "F");
                         }
 
-                        docPdf.setFontSize(9);
-                        docPdf.text(String(usuario), 23, y + 5.5);
+                        const fechaModificacion = formatearFechaHora(
+                            prediccion.fechaActualizacion || prediccion.fechaPrediccion || prediccion.fecha
+                        );
+
+                        docPdf.setFontSize(8.5);
+
+                        docPdf.text(String(usuario).substring(0, 24), 23, y + 5.5);
+
                         docPdf.text(
-                            `${partido.local} ${predLocal} - ${predVisitante} ${partido.visitante}`,
-                            85,
+                            `${partido.local} ${predLocal} - ${predVisitante} ${partido.visitante}`.substring(0, 32),
+                            72,
                             y + 5.5
                         );
-                        docPdf.text(String(puntos), 167, y + 5.5);
+
+                        docPdf.text(fechaModificacion, 135, y + 5.5);
+
+                        docPdf.text(String(puntos), 176, y + 5.5);
 
                         y += 8;
                     });

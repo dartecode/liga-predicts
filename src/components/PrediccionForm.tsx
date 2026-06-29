@@ -34,6 +34,15 @@ export default function PrediccionForm({
         cargarPrediccion();
     }, [partidoId, usuario.id]);
 
+    const validarNumero = (
+        valor: string,
+        setter: (value: number | "") => void
+    ) => {
+        if (/^\d*$/.test(valor)) {
+            setter(valor === "" ? "" : Number(valor));
+        }
+    };
+
     const handleGuardar = async () => {
         if (guardando) return;
 
@@ -59,7 +68,7 @@ export default function PrediccionForm({
                 partidoAcertado: false,
             });
 
-            setMensaje("Predicción guardada");
+            setMensaje("Predicción guardada correctamente");
             onGuardado?.();
         } catch (error) {
             console.error(error);
@@ -70,68 +79,65 @@ export default function PrediccionForm({
     };
 
     return (
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="mb-4 text-center text-xl font-semibold text-slate-800">
-                Tu predicción
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="mb-4 text-center text-sm font-semibold text-slate-600">
+                Tu marcador
             </p>
 
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <div className="flex items-center justify-center gap-3">
-                    <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={golesLocal}
-                        disabled={guardando}
-                        onChange={(e) => {
-                            const valor = e.target.value;
-
-                            if (/^\d*$/.test(valor)) {
-                                setGolesLocal(valor === "" ? "" : Number(valor));
-                            }
-                        }}
-                        className="h-14 w-24 rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-2xl font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-                    />
-
-                    <span className="text-lg font-bold text-slate-500">-</span>
-
-                    <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={golesVisitante}
-                        disabled={guardando}
-                        onChange={(e) => {
-                            const valor = e.target.value;
-
-                            if (/^\d*$/.test(valor)) {
-                                setGolesVisitante(valor === "" ? "" : Number(valor));
-                            }
-                        }}
-                        className="h-14 w-24 rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-2xl font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-                    />
-                </div>
-
-                <button
-                    onClick={handleGuardar}
+            <div className="flex items-center justify-center gap-4">
+                <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={golesLocal}
                     disabled={guardando}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400 sm:w-auto"
-                >
-                    {guardando && (
-                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                    )}
+                    onChange={(e) => {
+                        const valor = e.target.value;
 
-                    {guardando ? "Guardando..." : "Guardar"}
-                </button>
+                        if (/^\d*$/.test(valor)) {
+                            setGolesLocal(valor === "" ? "" : Number(valor));
+                        }
+                    }}
+                    className="h-20 w-24 rounded-2xl border border-slate-300 bg-slate-50 text-center text-4xl font-black text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                />
+
+                <span className="text-3xl font-black text-slate-500">-</span>
+
+                <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={golesVisitante}
+                    disabled={guardando}
+                    onChange={(e) => {
+                        const valor = e.target.value;
+
+                        if (/^\d*$/.test(valor)) {
+                            setGolesVisitante(valor === "" ? "" : Number(valor));
+                        }
+                    }}
+                    className="h-20 w-24 rounded-2xl border border-slate-300 bg-slate-50 text-center text-4xl font-black text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                />
             </div>
+
+            <button
+                onClick={handleGuardar}
+                disabled={guardando}
+                className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+            >
+                {guardando && (
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                )}
+
+                {guardando ? "Guardando..." : "Guardar pronóstico"}
+            </button>
 
             {mensaje && (
                 <p
-                    className={`mt-4 rounded-xl p-3 text-center text-sm font-semibold ${
-                        mensaje.includes("Error") || mensaje.includes("Ingresa")
+                    className={`mt-4 rounded-xl p-3 text-center text-sm font-semibold ${mensaje.includes("Error") || mensaje.includes("Ingresa")
                             ? "border border-red-200 bg-red-50 text-red-700"
                             : "border border-blue-200 bg-blue-50 text-blue-700"
-                    }`}
+                        }`}
                 >
                     {mensaje}
                 </p>

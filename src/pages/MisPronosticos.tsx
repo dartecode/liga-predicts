@@ -66,6 +66,22 @@ export default function MisPronosticos() {
         return fechaPartido > ahora;
       });
 
+      const partidosOrdenados = partidosFiltrados.sort((a, b) => {
+        const aPronosticado = !!a.pronostico;
+        const bPronosticado = !!b.pronostico;
+
+        if (aPronosticado !== bPronosticado) {
+          return aPronosticado ? 1 : -1;
+        }
+
+        return (
+          convertirFecha(a.fechaPartido).getTime() -
+          convertirFecha(b.fechaPartido).getTime()
+        );
+      });
+
+      setPartidos(partidosOrdenados);
+
       setPartidos(partidosFiltrados);
     } catch (error) {
       console.error(error);
@@ -210,13 +226,14 @@ export default function MisPronosticos() {
 
                           <span className="text-slate-400">vs</span>
 
+                          {partido.visitante}
+                          
                           <ReactCountryFlag
                             countryCode={BANDERAS[partido.visitante]}
                             svg
                             style={{ width: "1.5em", height: "1.5em" }}
                           />
 
-                          {partido.visitante}
                         </h2>
 
                         <p className="mt-2 text-sm text-slate-500">
@@ -243,9 +260,9 @@ export default function MisPronosticos() {
                           setPartidoSeleccionado(partido);
                         }}
                         disabled={bloqueado}
-                        className={`rounded-xl px-5 py-2 font-bold shadow-sm transition ${bloqueado
-                            ? "cursor-not-allowed bg-slate-300 text-slate-500"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
+                        className={`rounded-xl px-5 py-2 font-bold transition ${bloqueado
+                          ? "cursor-not-allowed bg-slate-200 text-slate-500"
+                          : "bg-[#3483fa] text-white hover:bg-[#2968c8]"
                           }`}
                       >
                         {bloqueado
@@ -264,44 +281,57 @@ export default function MisPronosticos() {
       </div>
 
       {partidoSeleccionado && perfil && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">
-                  Guardar pronóstico
-                </h2>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-3 sm:items-center">
+          <div className="w-full max-w-md animate-[slideUp_0.25s_ease-out] rounded-t-3xl border border-slate-200 bg-white p-6 shadow-xl sm:rounded-2xl">
+            <div className="border-b border-slate-200 bg-white px-5 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">
+                    Guardar pronóstico
+                  </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Ingresa el marcador que crees que tendrá el partido.
-                </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Ingresa el marcador que crees que tendrá el partido.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setPartidoSeleccionado(null)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-slate-100 p-5">
+              <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                <p className="text-sm font-semibold text-blue-700">Partido</p>
+
+                <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                  <p className="font-black text-slate-800">
+                    {partidoSeleccionado.local}
+                  </p>
+
+                  <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                    VS
+                  </span>
+
+                  <p className="font-black text-slate-800">
+                    {partidoSeleccionado.visitante}
+                  </p>
+                </div>
               </div>
 
-              <button
-                onClick={() => setPartidoSeleccionado(null)}
-                className="rounded-full px-3 py-1 text-lg font-bold text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-              >
-                ✕
-              </button>
+              <PrediccionForm
+                partidoId={String(partidoSeleccionado.id)}
+                usuario={perfil}
+                onGuardado={async () => {
+                  setPartidoSeleccionado(null);
+                  await cargarPartidos();
+                }}
+              />
             </div>
-
-            <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">
-              <p className="text-sm text-slate-500">Partido</p>
-
-              <h3 className="mt-2 text-lg font-black text-slate-800">
-                {partidoSeleccionado.local} vs{" "}
-                {partidoSeleccionado.visitante}
-              </h3>
-            </div>
-
-            <PrediccionForm
-              partidoId={String(partidoSeleccionado.id)}
-              usuario={perfil}
-              onGuardado={async () => {
-                setPartidoSeleccionado(null);
-                await cargarPartidos();
-              }}
-            />
           </div>
         </div>
       )}

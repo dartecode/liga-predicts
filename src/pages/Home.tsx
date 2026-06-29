@@ -90,17 +90,35 @@ export default function Home() {
 
   const partidosHoy = partidos
     .filter((partido) => esHoy(partido.fechaPartido))
-    .sort(
-      (a, b) =>
+    .sort((a, b) => {
+      const aBloqueado = partidoBloqueado(a.fechaPartido);
+      const bBloqueado = partidoBloqueado(b.fechaPartido);
+
+      const aPronosticado = !!a.pronostico;
+      const bPronosticado = !!b.pronostico;
+
+      if (!aBloqueado && !bBloqueado && aPronosticado !== bPronosticado) {
+        return aPronosticado ? 1 : -1;
+      }
+
+      if (aBloqueado !== bBloqueado) {
+        return aBloqueado ? 1 : -1;
+      }
+
+      return (
         convertirFecha(a.fechaPartido).getTime() -
         convertirFecha(b.fechaPartido).getTime()
-    );
+      );
+    });
 
-  const totalPartidos = partidos.length;
+  const hechosHoy = partidosHoy.filter((partido) => !!partido.pronostico).length;
 
-  const totalPronosticados = partidos.filter((p) => p.pronostico).length;
+  const pendientesHoy = partidosHoy.filter((partido) => {
+    const bloqueado = partidoBloqueado(partido.fechaPartido);
+    const tienePronostico = !!partido.pronostico;
 
-  const totalPendientes = totalPartidos - totalPronosticados;
+    return !bloqueado && !tienePronostico;
+  }).length;
 
   const ahora = new Date();
 
@@ -224,13 +242,12 @@ export default function Home() {
 
                           <span className="text-slate-400">vs</span>
 
+                          {partido.visitante}
                           <ReactCountryFlag
                             countryCode={BANDERAS[partido.visitante]}
                             svg
                             style={{ width: "1.2em", height: "1.2em" }}
                           />
-
-                          {partido.visitante}
                         </h2>
 
                         <p className="mt-2 text-sm text-slate-500">
@@ -266,21 +283,21 @@ export default function Home() {
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
                 <p className="text-2xl font-black text-slate-800">
-                  {totalPartidos}
+                  {partidosHoy.length}
                 </p>
                 <p className="text-sm text-slate-500">Partidos</p>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
                 <p className="text-2xl font-black text-green-600">
-                  {totalPronosticados}
+                  {hechosHoy}
                 </p>
                 <p className="text-sm text-slate-500">Hechos</p>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
                 <p className="text-2xl font-black text-orange-500">
-                  {totalPendientes}
+                  {pendientesHoy}
                 </p>
                 <p className="text-sm text-slate-500">Pendientes</p>
               </div>
@@ -334,33 +351,57 @@ export default function Home() {
       </div>
 
       {partidoSeleccionado && perfil && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-black text-slate-800">
-                Pronosticar partido
-              </h2>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-3 sm:items-center">
+          <div className="w-full max-w-md animate-[slideUp_0.25s_ease-out] overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-xl sm:rounded-2xl">
+            <div className="border-b border-slate-200 bg-white px-5 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-slate-800">
+                    Pronosticar partido
+                  </h2>
 
-              <button
-                onClick={() => setPartidoSeleccionado(null)}
-                className="rounded-lg bg-slate-100 px-3 py-1 font-bold text-slate-600"
-              >
-                ✕
-              </button>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Ingresa el marcador que crees que tendrá el partido.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setPartidoSeleccionado(null)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
-            <p className="mb-4 text-center font-bold text-slate-800">
-              {partidoSeleccionado.local} vs {partidoSeleccionado.visitante}
-            </p>
+            <div className="bg-slate-100 p-5">
+              <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                <p className="text-sm font-semibold text-blue-700">Partido</p>
 
-            <PrediccionForm
-              partidoId={partidoSeleccionado.id}
-              usuario={perfil}
-              onGuardado={() => {
-                setPartidoSeleccionado(null);
-                cargarPartidos();
-              }}
-            />
+                <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                  <p className="font-black text-slate-800">
+                    {partidoSeleccionado.local}
+                  </p>
+
+                  <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                    VS
+                  </span>
+
+                  <p className="font-black text-slate-800">
+                    {partidoSeleccionado.visitante}
+                  </p>
+                </div>
+              </div>
+
+              <PrediccionForm
+                partidoId={String(partidoSeleccionado.id)}
+                usuario={perfil}
+                onGuardado={() => {
+                  setPartidoSeleccionado(null);
+                  cargarPartidos();
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
