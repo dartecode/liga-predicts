@@ -227,7 +227,7 @@ export default function MisPronosticos() {
                           <span className="text-slate-400">vs</span>
 
                           {partido.visitante}
-                          
+
                           <ReactCountryFlag
                             countryCode={BANDERAS[partido.visitante]}
                             svg
@@ -326,9 +326,19 @@ export default function MisPronosticos() {
               <PrediccionForm
                 partidoId={String(partidoSeleccionado.id)}
                 usuario={perfil}
-                onGuardado={async () => {
+                onGuardado={(pronosticoActualizado) => {
+                  setPartidos((prev) =>
+                    prev.map((partido) =>
+                      String(partido.id) === String(pronosticoActualizado.partidoId)
+                        ? {
+                          ...partido,
+                          pronostico: pronosticoActualizado,
+                        }
+                        : partido
+                    )
+                  );
+
                   setPartidoSeleccionado(null);
-                  await cargarPartidos();
                 }}
               />
             </div>

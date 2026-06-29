@@ -8,7 +8,7 @@ import type { Usuario } from "../types/Usuario";
 interface Props {
     partidoId: string;
     usuario: Usuario;
-    onGuardado?: () => void;
+    onGuardado?: (pronosticoActualizado: any) => void;
 }
 
 export default function PrediccionForm({
@@ -46,7 +46,7 @@ export default function PrediccionForm({
         setMensaje("");
 
         try {
-            await guardarPrediccion({
+            const pronosticoActualizado = {
                 partidoId,
                 usuarioId: usuario.id,
                 nombreUsuario: usuario.usuario,
@@ -57,10 +57,11 @@ export default function PrediccionForm({
                 puntos: 0,
                 resultadoExacto: false,
                 partidoAcertado: false,
-            });
+            };
+            await guardarPrediccion(pronosticoActualizado);
 
             setMensaje("Predicción guardada correctamente");
-            onGuardado?.();
+            onGuardado?.(pronosticoActualizado);
         } catch (error) {
             console.error(error);
             setMensaje("Error al guardar la predicción");
@@ -126,8 +127,8 @@ export default function PrediccionForm({
             {mensaje && (
                 <p
                     className={`mt-4 rounded-xl p-3 text-center text-sm font-semibold ${mensaje.includes("Error") || mensaje.includes("Ingresa")
-                            ? "border border-red-200 bg-red-50 text-red-700"
-                            : "border border-blue-200 bg-blue-50 text-blue-700"
+                        ? "border border-red-200 bg-red-50 text-red-700"
+                        : "border border-blue-200 bg-blue-50 text-blue-700"
                         }`}
                 >
                     {mensaje}

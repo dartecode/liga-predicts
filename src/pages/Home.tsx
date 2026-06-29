@@ -396,9 +396,19 @@ export default function Home() {
               <PrediccionForm
                 partidoId={String(partidoSeleccionado.id)}
                 usuario={perfil}
-                onGuardado={() => {
+                onGuardado={(pronosticoActualizado) => {
+                  setPartidos((prev) =>
+                    prev.map((partido) =>
+                      String(partido.id) === String(pronosticoActualizado.partidoId)
+                        ? {
+                          ...partido,
+                          pronostico: pronosticoActualizado,
+                        }
+                        : partido
+                    )
+                  );
+
                   setPartidoSeleccionado(null);
-                  cargarPartidos();
                 }}
               />
             </div>
