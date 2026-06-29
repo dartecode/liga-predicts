@@ -34,15 +34,6 @@ export default function PrediccionForm({
         cargarPrediccion();
     }, [partidoId, usuario.id]);
 
-    const validarNumero = (
-        valor: string,
-        setter: (value: number | "") => void
-    ) => {
-        if (/^\d*$/.test(valor)) {
-            setter(valor === "" ? "" : Number(valor));
-        }
-    };
-
     const handleGuardar = async () => {
         if (guardando) return;
 
